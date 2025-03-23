@@ -17,7 +17,7 @@ page_bg_color = """
 st.markdown(page_bg_color, unsafe_allow_html=True)
 
 # Mostrar logo personalizado
-logo = Image.open(r'C:\Users\mauri\OneDrive\Documentos\Projects\City_Size_Comparison\images\city_size_header.png')
+logo = Image.open('images/city_size_header.png')
 st.image(logo, use_container_width=True)
 
 # Obtener geometría (con caching)
