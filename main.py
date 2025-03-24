@@ -6,37 +6,63 @@ from shapely.affinity import translate
 from PIL import Image
 import geopandas as gpd
 
-# Personalizar fondo de página
-page_bg_color = """
+# Custom page background and styling
+st.markdown("""
 <style>
-[data-testid="stAppViewContainer"] {
-    background-color: rgba(204, 204, 204, 1);
+.stApp {
+    background-color: white;
+    color: #333;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #333;
+}
+
+.stTextInput>div>div>input {
+    color: #333;
 }
 </style>
-"""
-st.markdown(page_bg_color, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
-# Mostrar logo personalizado
-logo = Image.open('images/city_size_header.png')
+# Display custom logo
+logo = Image.open('images\city_size_comparison_header.png.png')
 st.image(logo, use_container_width=True)
 
-# Obtener geometría (con caching)
+# Introductory text
+st.markdown("""
+Welcome to **City Size Comparison**. Enter two cities to visually compare their sizes:
+""")
+
+# Get city geometry (with caching)
 @st.cache_data(show_spinner=True)
 def get_city_shape(city):
     try:
         return ox.geocode_to_gdf(city)
     except:
-        st.warning(f"⚠️ City'{city}' not found.")
+        st.warning(f"⚠️ City '{city}' not found.")
         return None
 
-# Calcular área en km²
+# Calculate area in km²
 def calculate_area(gdf):
     gdf_proj = gdf.to_crs(epsg=3857)
     return round(gdf_proj.geometry.area.iloc[0] / 1e6, 2)
 
-# Entrada de ciudades
-city1 = st.text_input("Enter the first city:")
-city2 = st.text_input("Enter the second city:")
+# Initialize session state for swapping
+if 'city1' not in st.session_state:
+    st.session_state['city1'] = ""
+if 'city2' not in st.session_state:
+    st.session_state['city2'] = ""
+
+# City inputs
+col1, col2, col3 = st.columns([4,4,1])
+with col1:
+    city1 = st.text_input("Enter the first city:", value=st.session_state['city1'])
+with col2:
+    city2 = st.text_input("Enter the second city:", value=st.session_state['city2'])
+with col3:
+    if st.button("🔄"):
+        st.session_state['city1'], st.session_state['city2'] = city2, city1
+        st.rerun()
 
 if city1:
     gdf1 = get_city_shape(city1)
@@ -45,7 +71,7 @@ if city1:
         centroid1 = gdf1.geometry.centroid.iloc[0]
         m = folium.Map(location=[centroid1.y, centroid1.x], zoom_start=10)
 
-        # Añadir claramente nombre correcto (Ciudad 1)
+        # Add City 1 shape
         folium.GeoJson(gdf1,
                        name=f"{city1}",
                        style_function=lambda x: {'fillColor':'blue','color':'blue','weight':2,'fillOpacity':0.4},
@@ -79,17 +105,17 @@ if city1:
 
         folium.LayerControl('topright', collapsed=False).add_to(m)
 
-        # Mostrar mapa claramente en Streamlit
+        # Display map in Streamlit
         st_folium(m, width=700, height=500)
 
-        # Descargar mapa en HTML
+        # Download map as HTML
         map_html = m.get_root().render()
         st.download_button(label="🌍 Download map HTML",
                            data=map_html,
                            file_name='city_size_comparison.html',
                            mime='text/html')
 
-# Disclaimer claramente visible con fuente de los datos
+# Disclaimer with data source and creator
 st.markdown(
     """
     <hr>
