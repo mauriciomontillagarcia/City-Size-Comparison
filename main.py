@@ -25,7 +25,7 @@ h1, h2, h3, h4, h5, h6 {
 """, unsafe_allow_html=True)
 
 # Display custom logo
-logo = Image.open('images\city_size_comparison_header.png')
+logo = Image.open('images/city_size_comparison_header.png')
 st.image(logo, use_container_width=True)
 
 # Introductory text
